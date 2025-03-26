@@ -3,6 +3,7 @@ using UnityEditor;
 using System;
 using System.IO;
 using System.Security.Policy;
+using System.Collections.Generic;
 
 public class NoteEditor : EditorWindow, IHasCustomMenu
 {
@@ -12,6 +13,9 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     private string currentAssetGUID = "";
     private bool isEditMode;
     private const string EditModePrefKey = "NoteEditor_IsEditMode";
+
+    private Stack<string> undoStack = new Stack<string>();
+    private Stack<string> redoStack = new Stack<string>();
 
     [MenuItem("Window/Note Editor")]
     public static void ShowWindow()
@@ -54,6 +58,10 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
     private void OnSelectionChange()
     {
+        // clear undo & redo stacks
+        undoStack.Clear();
+        redoStack.Clear();
+
         LoadNoteForSelectedAsset();
         Repaint();
     }
@@ -115,9 +123,15 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         if (isEditMode)
         {
             EditorGUI.BeginChangeCheck();
-            noteText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
+            string newText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
+
             if (EditorGUI.EndChangeCheck())
             {
+                // Push current text to undo stack before changing
+                undoStack.Push(noteText);
+                redoStack.Clear(); // Clear redo stack on new edit
+
+                noteText = newText;
                 SaveOrDeleteNote();
             }
         }
@@ -136,6 +150,9 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             GUILayout.FlexibleSpace();
         }
         EditorGUILayout.EndScrollView();
+
+        DetectUndoKeys();
+
     }
 
     private void LoadNoteForSelectedAsset()
@@ -202,7 +219,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
     private static void EditorGUI_hyperLinkClicked(EditorWindow window, HyperLinkClickedEventArgs args)
     {
-        Debug.Log("URL clicked");
         if (window.titleContent.text == "Note Editor")
         {
             string href, GUID;
@@ -223,6 +239,50 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
                 {
                     Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
                 }
+            }
+        }
+    }
+
+    private void Undo()
+    {
+        if (undoStack.Count > 0)
+        {
+            redoStack.Push(noteText);
+            noteText = undoStack.Pop();
+
+            // lose focus to prevent text area from keeping text in cache
+            GUI.FocusControl(null);
+            // refocus
+            GUI.FocusControl("NoteTextArea");
+
+            Repaint();
+        }
+    }
+
+    private void Redo()
+    {
+        if (redoStack.Count > 0)
+        {
+            undoStack.Push(noteText);
+            noteText = redoStack.Pop();
+            Repaint();
+        }
+    }
+
+    private void DetectUndoKeys()
+    {
+        Event e = Event.current;
+        if (e.type == EventType.KeyDown && e.control)
+        {
+            if (e.keyCode == KeyCode.Z)
+            {
+                Undo();
+                e.Use(); // Mark event as used
+            }
+            else if (e.keyCode == KeyCode.Y)
+            {
+                Redo();
+                e.Use();
             }
         }
     }
