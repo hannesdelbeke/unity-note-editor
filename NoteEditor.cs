@@ -10,7 +10,8 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     private Vector2 scrollPosition;
     private string noteFilePath = "";
     private string currentAssetGUID = "";
-    private bool isEditMode = true; // true = Edit Mode; false = View Mode
+    private bool isEditMode;
+    private const string EditModePrefKey = "NoteEditor_IsEditMode";
 
     [MenuItem("Window/Note Editor")]
     public static void ShowWindow()
@@ -23,7 +24,16 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         EditorGUI.hyperLinkClicked += EditorGUI_hyperLinkClicked;
     }
 
-    // Implement IHasCustomMenu to add a toggle menu item.
+    private void OnEnable()
+    {
+        isEditMode = EditorPrefs.GetBool(EditModePrefKey, true);
+    }
+
+    private void OnDisable()
+    {
+        EditorPrefs.SetBool(EditModePrefKey, isEditMode);
+    }
+
     public void AddItemsToMenu(GenericMenu menu)
     {
         menu.AddItem(new GUIContent("Edit Mode"), isEditMode, ToggleMode);
@@ -32,37 +42,33 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     private void ToggleMode()
     {
         isEditMode = !isEditMode;
+        EditorPrefs.SetBool(EditModePrefKey, isEditMode);
         Repaint();
     }
 
     private void OnFocus()
     {
-        // Reload note when window is focused in case the selected asset changed.
         LoadNoteForSelectedAsset();
     }
 
     private void OnSelectionChange()
     {
-        // Update note when the selected asset changes.
         LoadNoteForSelectedAsset();
         Repaint();
     }
 
     private void OnGUI()
     {
-        // Check if there is a selected asset
         if (Selection.activeObject == null)
         {
             EditorGUILayout.HelpBox("Please select an asset in the Project window.", MessageType.Info);
             return;
         }
 
-        // Display the current asset name
         GUI.enabled = false;
         GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
         GUI.enabled = true;
 
-        // Begin scroll view for note content.
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
         if (isEditMode)
@@ -76,17 +82,13 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
         else
         {
-            // get the default unity text color
             Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
-
-
-            // In view mode, display the note text using a rich text enabled style.
             GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
             {
                 richText = true,
                 wordWrap = true,
                 normal = { textColor = textColor },  // Default text color
-                focused = { textColor = textColor } // Prevent blue text when clicked
+                focused = { textColor = textColor }  // Prevent blue text when clicked
             };
             EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
             GUILayout.FlexibleSpace();
@@ -94,9 +96,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         EditorGUILayout.EndScrollView();
     }
 
-    /// <summary>
-    /// Loads the note associated with the currently selected asset.
-    /// </summary>
     private void LoadNoteForSelectedAsset()
     {
         if (Selection.activeObject == null)
@@ -105,11 +104,9 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             return;
         }
 
-        // Get the asset path and then the GUID.
         string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
         string guid = AssetDatabase.AssetPathToGUID(assetPath);
 
-        // Only reload if the asset GUID has changed.
         if (guid != currentAssetGUID)
         {
             currentAssetGUID = guid;
@@ -126,12 +123,8 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
     }
 
-    /// <summary>
-    /// Saves the note if it has text; otherwise, deletes the note file if it exists.
-    /// </summary>
     private void SaveOrDeleteNote()
     {
-        // Ensure the directory exists.
         string noteFolder = GetNoteFolderPath();
         if (!Directory.Exists(noteFolder))
         {
@@ -140,7 +133,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
         if (string.IsNullOrEmpty(noteText.Trim()))
         {
-            // If text is empty and file exists, delete it.
             if (File.Exists(noteFilePath))
             {
                 File.Delete(noteFilePath);
@@ -149,25 +141,17 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
         else
         {
-            // Save the note text to the file.
             File.WriteAllText(noteFilePath, noteText);
             AssetDatabase.Refresh();
         }
     }
 
-    /// <summary>
-    /// Returns the full path for the notes folder, which is one level above the Assets folder.
-    /// </summary>
     private string GetNoteFolderPath()
     {
-        // Application.dataPath returns something like "C:/.../MyProject/Assets"
         string projectPath = Path.GetDirectoryName(Application.dataPath);
         return Path.Combine(projectPath, "Notes");
     }
 
-    /// <summary>
-    /// Returns the full file path for the note corresponding to a given asset GUID.
-    /// </summary>
     private string GetNoteFilePath(string guid)
     {
         string noteFolder = GetNoteFolderPath();
@@ -185,13 +169,11 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             hyperLinkData.TryGetValue("href", out href);
             hyperLinkData.TryGetValue("GUID", out GUID);
 
-            // load URLs in browser
             if (href != null)
             {
                 Application.OpenURL(href);
             }
 
-            // select asset in project window
             if (GUID != null)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(GUID);
