@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using System;
 using System.IO;
+using System.Security.Policy;
 
 public class NoteEditor : EditorWindow, IHasCustomMenu
 {
@@ -13,7 +15,12 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     [MenuItem("Window/Note Editor")]
     public static void ShowWindow()
     {
-        GetWindow<NoteEditor>("Note Editor");
+       GetWindow<NoteEditor>("Note Editor");
+    }
+
+    static NoteEditor()
+    {
+        EditorGUI.hyperLinkClicked += EditorGUI_hyperLinkClicked;
     }
 
     // Implement IHasCustomMenu to add a toggle menu item.
@@ -69,13 +76,19 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
         else
         {
+            // get the default unity text color
+            Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
+
+
             // In view mode, display the note text using a rich text enabled style.
             GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
             {
                 richText = true,
-                wordWrap = true
+                wordWrap = true,
+                normal = { textColor = textColor },  // Default text color
+                focused = { textColor = textColor } // Prevent blue text when clicked
             };
-            GUILayout.Label(noteText, richTextStyle, GUILayout.ExpandHeight(true));
+            EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
             GUILayout.FlexibleSpace();
         }
         EditorGUILayout.EndScrollView();
@@ -159,5 +172,38 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     {
         string noteFolder = GetNoteFolderPath();
         return Path.Combine(noteFolder, guid + ".txt");
+    }
+
+    private static void EditorGUI_hyperLinkClicked(EditorWindow window, HyperLinkClickedEventArgs args)
+    {
+        Debug.Log("URL clicked");
+        if (window.titleContent.text == "Note Editor")
+        {
+            string href, url, GUID;
+
+            var hyperLinkData = args.hyperLinkData;
+            hyperLinkData.TryGetValue("href", out href);
+            hyperLinkData.TryGetValue("url", out url);
+            hyperLinkData.TryGetValue("GUID", out GUID);
+
+            // load URLs in browser
+            if (url != null) {
+                Application.OpenURL(url);
+            }
+            if (href != null)
+            {
+                Application.OpenURL(href);
+            }
+
+            // select asset in project window
+            if (GUID != null)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(GUID);
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
+                }
+            }
+        }
     }
 }
