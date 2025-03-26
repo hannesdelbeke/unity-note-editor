@@ -2,17 +2,30 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-public class NoteEditor : EditorWindow
+public class NoteEditor : EditorWindow, IHasCustomMenu
 {
     private string noteText = "";
     private Vector2 scrollPosition;
     private string noteFilePath = "";
     private string currentAssetGUID = "";
+    private bool isEditMode = true; // true = Edit Mode; false = View Mode
 
     [MenuItem("Window/Note Editor")]
     public static void ShowWindow()
     {
         GetWindow<NoteEditor>("Note Editor");
+    }
+
+    // Implement IHasCustomMenu to add a toggle menu item.
+    public void AddItemsToMenu(GenericMenu menu)
+    {
+        menu.AddItem(new GUIContent("Edit Mode"), isEditMode, ToggleMode);
+    }
+
+    private void ToggleMode()
+    {
+        isEditMode = !isEditMode;
+        Repaint();
     }
 
     private void OnFocus()
@@ -38,15 +51,32 @@ public class NoteEditor : EditorWindow
         }
 
         // Display the current asset name
+        GUI.enabled = false;
         GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
+        GUI.enabled = true;
 
-        // Text field inside a scroll view for editing notes
+        // Begin scroll view for note content.
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-        EditorGUI.BeginChangeCheck();
-        noteText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
-        if (EditorGUI.EndChangeCheck())
+
+        if (isEditMode)
         {
-            SaveOrDeleteNote();
+            EditorGUI.BeginChangeCheck();
+            noteText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
+            if (EditorGUI.EndChangeCheck())
+            {
+                SaveOrDeleteNote();
+            }
+        }
+        else
+        {
+            // In view mode, display the note text using a rich text enabled style.
+            GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
+            {
+                richText = true,
+                wordWrap = true
+            };
+            GUILayout.Label(noteText, richTextStyle, GUILayout.ExpandHeight(true));
+            GUILayout.FlexibleSpace();
         }
         EditorGUILayout.EndScrollView();
     }
