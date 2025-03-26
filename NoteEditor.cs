@@ -99,6 +99,17 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     }
 
 
+    private void DrawTopBar()
+    {
+        EditorGUILayout.BeginHorizontal();
+        GUI.enabled = false;
+        GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
+        GUI.enabled = true;
+        GUILayout.FlexibleSpace();
+        drawToggleButton();
+        EditorGUILayout.EndHorizontal();
+    }
+
     private void DrawNoteEditor()
     {
         EditorGUI.BeginChangeCheck();
@@ -139,17 +150,7 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             return;
         }
 
-        // horizontal l;ayout
-        EditorGUILayout.BeginHorizontal();
-        GUI.enabled = false;
-        GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
-        GUI.enabled = true;
-
-        GUILayout.FlexibleSpace();
-
-        drawToggleButton();
-
-        EditorGUILayout.EndHorizontal();
+        DrawTopBar();
 
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
