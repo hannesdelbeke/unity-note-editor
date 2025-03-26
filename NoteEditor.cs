@@ -49,6 +49,7 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     private void OnFocus()
     {
         LoadNoteForSelectedAsset();
+        Repaint();
     }
 
     private void OnSelectionChange()
@@ -147,19 +148,16 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
         string guid = AssetDatabase.AssetPathToGUID(assetPath);
 
-        if (guid != currentAssetGUID)
-        {
-            currentAssetGUID = guid;
-            noteFilePath = GetNoteFilePath(guid);
+        currentAssetGUID = guid;
+        noteFilePath = GetNoteFilePath(guid);
 
-            if (File.Exists(noteFilePath))
-            {
-                noteText = File.ReadAllText(noteFilePath);
-            }
-            else
-            {
-                noteText = "";
-            }
+        if (File.Exists(noteFilePath))
+        {
+            noteText = File.ReadAllText(noteFilePath);
+        }
+        else
+        {
+            noteText = "";
         }
     }
 
