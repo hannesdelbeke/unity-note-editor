@@ -57,6 +57,38 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         Repaint();
     }
 
+    private void drawToggleButton()
+    {
+        GUIContent iconContent = isEditMode
+            ? EditorGUIUtility.IconContent("d_scenevis_visible_hover@2x")  // View mode icon
+            : EditorGUIUtility.IconContent("TrueTypeFontImporter Icon");  // Edit mode icon
+
+        // Access the texture from the icon content and scale it
+        Texture2D iconTexture = iconContent.image as Texture2D;
+
+        Rect iconRect = GUILayoutUtility.GetRect(20, 20); // Define the size for the icon
+
+        GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton)
+        {
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0),
+        };
+
+        if (GUI.Button(new Rect(iconRect.x, iconRect.y, iconRect.width, iconRect.height), GUIContent.none, buttonStyle))
+        {
+            ToggleMode(); // Handle toggle action
+        }
+
+        // draw the texture on top of our button
+        if (iconTexture != null)
+        {
+            // scale rect slightly smaller than button. then offset it to center it
+            iconRect = new Rect(iconRect.x + 2, iconRect.y + 2, iconRect.width - 4, iconRect.height - 4);
+            // Create a scaled version of the texture
+            GUI.DrawTexture(iconRect, iconTexture, ScaleMode.ScaleToFit);
+        }
+    }
+
     private void OnGUI()
     {
         if (Selection.activeObject == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject)))
@@ -65,9 +97,17 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             return;
         }
 
+        // horizontal l;ayout
+        EditorGUILayout.BeginHorizontal();
         GUI.enabled = false;
         GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
         GUI.enabled = true;
+
+        GUILayout.FlexibleSpace();
+
+        drawToggleButton();
+
+        EditorGUILayout.EndHorizontal();
 
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
