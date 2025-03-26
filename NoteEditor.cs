@@ -59,7 +59,7 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
     private void OnGUI()
     {
-        if (Selection.activeObject == null)
+        if (Selection.activeObject == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject)))
         {
             EditorGUILayout.HelpBox("Please select an asset in the Project window.", MessageType.Info);
             return;
