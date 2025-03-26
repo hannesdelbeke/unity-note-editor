@@ -129,8 +129,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
         };
 
-        Debug.Log("Note Text: " + noteText);
-
         // for each new line in noteText, make a label, since URLs are buggy with newlines
         string[] lines = noteText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
         foreach (string line in lines)
@@ -230,7 +228,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
     private static void EditorGUI_hyperLinkClicked(EditorWindow window, HyperLinkClickedEventArgs args)
     {
-        Debug.Log("URL clicked");
         if (window.titleContent.text == "Note Editor")
         {
             string href, GUID;
