@@ -14,10 +14,16 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     private const string EditModePrefKey = "NoteEditor_IsEditMode";
 
     [MenuItem("Window/Note Editor")]
-    public static void ShowWindow()
+    static void Init()
     {
-        GetWindow<NoteEditor>("Note Editor");
+        var window = GetWindow<NoteEditor>("Note Editor");
+        window.Show();
     }
+
+    //public static void ShowWindow()
+    //{
+    //    GetWindow<NoteEditor>("Note Editor");
+    //}
 
     static NoteEditor()
     {
@@ -90,50 +96,75 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
     }
 
-    private void OnGUI()
+    private void DrawTopBar()
     {
-        if (Selection.activeObject == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject)))
-        {
-            EditorGUILayout.HelpBox("Please select an asset in the Project window.", MessageType.Info);
-            return;
-        }
-
-        // horizontal l;ayout
         EditorGUILayout.BeginHorizontal();
         GUI.enabled = false;
         GUILayout.Label("Selected Asset: " + Selection.activeObject.name, EditorStyles.label);
         GUI.enabled = true;
+        GUILayout.FlexibleSpace();
+        drawToggleButton();
+        EditorGUILayout.EndHorizontal();
+    }
 
+    private void DrawNoteEditor()
+    {
+        EditorGUI.BeginChangeCheck();
+        noteText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
+        if (EditorGUI.EndChangeCheck())
+        {
+            SaveOrDeleteNote();
+        }
+    }
+
+    private void DrawNoteViewer()
+    {
+        Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
+        GUIStyle style = new GUIStyle()
+        {
+            richText = true,
+            wordWrap = true,
+            normal = { textColor = textColor },  // Default text color
+            focused = { textColor = textColor },  // Prevent blue text when clicked
+            padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
+        };
+
+        Debug.Log("Note Text: " + noteText);
+
+        // for each new line in noteText, make a label, since URLs are buggy with newlines
+        string[] lines = noteText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        foreach (string line in lines)
+        {
+            EditorGUILayout.TextField(line, style);
+        }
+        //EditorGUILayout.TextField(noteText, style);
         GUILayout.FlexibleSpace();
 
-        drawToggleButton();
 
-        EditorGUILayout.EndHorizontal();
+        // GUIStyle style = new GUIStyle() { richText = true };
+        EditorGUILayout.TextField("<a data=\"some data\" otherData=\"some other data\">displayed string</a>", style);
 
+    }
+
+    private void OnGUI()
+    {
+        if (Selection.activeObject == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject)))
+        {   
+            EditorGUILayout.HelpBox("Please select an asset in the Project window.", MessageType.Info);
+            return;
+        }
+        DrawTopBar();
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
         if (isEditMode)
         {
-            EditorGUI.BeginChangeCheck();
-            noteText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
-            if (EditorGUI.EndChangeCheck())
-            {
-                SaveOrDeleteNote();
-            }
+            DrawNoteEditor();
         }
         else
         {
-            Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
-            GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
-            {
-                richText = true,
-                wordWrap = true,
-                normal = { textColor = textColor },  // Default text color
-                focused = { textColor = textColor },  // Prevent blue text when clicked
-                padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
-            };
-            EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
-            GUILayout.FlexibleSpace();
+            DrawNoteViewer();
+
+
+
         }
         EditorGUILayout.EndScrollView();
     }
