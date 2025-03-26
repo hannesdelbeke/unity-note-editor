@@ -15,7 +15,7 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     [MenuItem("Window/Note Editor")]
     public static void ShowWindow()
     {
-       GetWindow<NoteEditor>("Note Editor");
+        GetWindow<NoteEditor>("Note Editor");
     }
 
     static NoteEditor()
@@ -179,17 +179,13 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         Debug.Log("URL clicked");
         if (window.titleContent.text == "Note Editor")
         {
-            string href, url, GUID;
+            string href, GUID;
 
             var hyperLinkData = args.hyperLinkData;
             hyperLinkData.TryGetValue("href", out href);
-            hyperLinkData.TryGetValue("url", out url);
             hyperLinkData.TryGetValue("GUID", out GUID);
 
             // load URLs in browser
-            if (url != null) {
-                Application.OpenURL(url);
-            }
             if (href != null)
             {
                 Application.OpenURL(href);
