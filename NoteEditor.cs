@@ -309,4 +309,25 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
             }
         }
     }
+
+    [MenuItem("Assets/Copy GUID", false, 19)]
+    private static void CopyGUID()
+    {
+        // copy the GUID from the selected asset to the clipboard
+        if (Selection.activeObject != null)
+        {
+            string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            EditorGUIUtility.systemCopyBuffer = guid;
+        }
+    }
+
+    // Validate the menu item defined by the function above.
+    // The menu item will be disabled if this function returns false.
+    [MenuItem("Assets/Copy GUID", true)]
+    private static bool ValidateCopyGUID()
+    {
+        // Return false if valid asset selected, and ensure a valid GUID
+        return Selection.activeObject != null && !string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.activeObject)));
+    }
 }
