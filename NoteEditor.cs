@@ -45,15 +45,21 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
     private void ToggleMode()
     {
-        isEditMode = !isEditMode;
-        EditorPrefs.SetBool(EditModePrefKey, isEditMode);
-        Repaint();
+        EditorApplication.delayCall += () =>
+        {
+            isEditMode = !isEditMode;
+            EditorPrefs.SetBool(EditModePrefKey, isEditMode);
+            Repaint();
+        };
     }
 
     private void OnFocus()
     {
-        LoadNoteForSelectedAsset();
-        Repaint();
+        EditorApplication.delayCall += () =>
+        {
+            LoadNoteForSelectedAsset();
+            Repaint();
+        };
     }
 
     private void OnSelectionChange()
@@ -62,8 +68,11 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         undoStack.Clear();
         redoStack.Clear();
 
-        LoadNoteForSelectedAsset();
-        Repaint();
+        EditorApplication.delayCall += () =>
+        {
+            LoadNoteForSelectedAsset();
+            Repaint();
+        };
     }
 
     private void drawToggleButton()
