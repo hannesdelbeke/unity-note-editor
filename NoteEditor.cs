@@ -98,6 +98,39 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         }
     }
 
+
+    private void DrawNoteEditor()
+    {
+        EditorGUI.BeginChangeCheck();
+        string newText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            // Push current text to undo stack before changing
+            undoStack.Push(noteText);
+            redoStack.Clear(); // Clear redo stack on new edit
+
+            noteText = newText;
+            SaveOrDeleteNote();
+        }
+    }
+
+    private void DrawNoteViewer()
+    {
+        Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
+        GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
+        {
+            richText = true,
+            wordWrap = true,
+            normal = { textColor = textColor },  // Default text color
+            focused = { textColor = textColor },  // Prevent blue text when clicked
+            padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
+        };
+        EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
+        GUILayout.FlexibleSpace();
+    }
+
+
     private void OnGUI()
     {
         if (Selection.activeObject == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject)))
@@ -122,32 +155,11 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
 
         if (isEditMode)
         {
-            EditorGUI.BeginChangeCheck();
-            string newText = EditorGUILayout.TextArea(noteText, GUILayout.ExpandHeight(true));
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                // Push current text to undo stack before changing
-                undoStack.Push(noteText);
-                redoStack.Clear(); // Clear redo stack on new edit
-
-                noteText = newText;
-                SaveOrDeleteNote();
-            }
+            DrawNoteEditor();
         }
         else
         {
-            Color textColor = new GUIStyle(EditorStyles.label).normal.textColor;
-            GUIStyle richTextStyle = new GUIStyle(EditorStyles.label)
-            {
-                richText = true,
-                wordWrap = true,
-                normal = { textColor = textColor },  // Default text color
-                focused = { textColor = textColor },  // Prevent blue text when clicked
-                padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
-            };
-            EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
-            GUILayout.FlexibleSpace();
+            DrawNoteViewer();
         }
         EditorGUILayout.EndScrollView();
 
