@@ -149,16 +149,19 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
         string guid = AssetDatabase.AssetPathToGUID(assetPath);
 
-        currentAssetGUID = guid;
-        noteFilePath = GetNoteFilePath(guid);
+        if (guid != currentAssetGUID)
+        {
+            currentAssetGUID = guid;
+            noteFilePath = GetNoteFilePath(guid);
 
-        if (File.Exists(noteFilePath))
-        {
-            noteText = File.ReadAllText(noteFilePath);
-        }
-        else
-        {
-            noteText = "";
+            if (File.Exists(noteFilePath))
+            {
+                noteText = File.ReadAllText(noteFilePath);
+            }
+            else
+            {
+                noteText = "";
+            }
         }
     }
 
