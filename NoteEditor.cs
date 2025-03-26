@@ -129,7 +129,8 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
                 richText = true,
                 wordWrap = true,
                 normal = { textColor = textColor },  // Default text color
-                focused = { textColor = textColor }  // Prevent blue text when clicked
+                focused = { textColor = textColor },  // Prevent blue text when clicked
+                padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
             };
             EditorGUILayout.TextArea(noteText, richTextStyle, GUILayout.ExpandHeight(true));
             GUILayout.FlexibleSpace();
