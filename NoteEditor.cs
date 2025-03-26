@@ -182,6 +182,7 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         if (Selection.activeObject == null)
         {
             noteText = "";
+            currentAssetGUID = "";
             return;
         }
 
