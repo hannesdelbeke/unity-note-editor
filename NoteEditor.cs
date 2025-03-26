@@ -49,7 +49,8 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
     {
         isEditMode = !isEditMode;
         EditorPrefs.SetBool(EditModePrefKey, isEditMode);
-        Repaint();
+        LoadNoteForSelectedAsset();
+        //Repaint();
     }
 
     private void OnFocus()
@@ -123,25 +124,27 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         GUIStyle style = new GUIStyle()
         {
             richText = true,
-            wordWrap = true,
-            normal = { textColor = textColor },  // Default text color
+            wordWrap = false,                     // wrapping breaks URLs
+            normal = { textColor = textColor },   // Default text color
             focused = { textColor = textColor },  // Prevent blue text when clicked
-            padding = new RectOffset(3, 2, 2, 2)  // match text edit area padding
+            padding = new RectOffset(5, 2, 2, 2)
+            //margin = new RectOffset(0, 0, 0, 0)
+
         };
 
         // for each new line in noteText, make a label, since URLs are buggy with newlines
         string[] lines = noteText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
         foreach (string line in lines)
         {
-            EditorGUILayout.TextField(line, style);
+            // calc text width, for correct side scrolling support
+            float textWidth = style.CalcSize(new GUIContent(noteText)).x;
+            float windowWidth = position.width; // The current width of the editor window
+            float textFieldWidth = Mathf.Max(textWidth, windowWidth); // Ensure it never shrinks below the window width
+
+            EditorGUILayout.TextField(line, style, GUILayout.Width(textFieldWidth), GUILayout.Height(14.5f));
         }
         //EditorGUILayout.TextField(noteText, style);
         GUILayout.FlexibleSpace();
-
-
-        // GUIStyle style = new GUIStyle() { richText = true };
-        EditorGUILayout.TextField("<a data=\"some data\" otherData=\"some other data\">displayed string</a>", style);
-
     }
 
     private void OnGUI()
@@ -160,9 +163,6 @@ public class NoteEditor : EditorWindow, IHasCustomMenu
         else
         {
             DrawNoteViewer();
-
-
-
         }
         EditorGUILayout.EndScrollView();
     }
