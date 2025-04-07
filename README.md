@@ -1,5 +1,7 @@
 # Unity note editor
-Attach notes to Unity assets & edit them in editor.
+Attach notes to Unity assets & edit them in editor.  
+- Notes can have **rich** _text_ and [URLs](https://github.com/hannesdelbeke/unity-note-editor).  
+- Can be combined with https://github.com/hannesdelbeke/unity-deeplink to support URLs to other assets 
 
 ## Quickstart
 1. Open from the menu `Window/Note Editor`
